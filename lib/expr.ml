@@ -12,22 +12,37 @@ let rec free v = function
 open Graph
 
 let of_graph (nodes, edges) node =
-  let rec aux env {node; (* output *) port} =
+  let fresh =
+    let ct = ref 0 in
+    fun () ->
+      incr ct;
+      Printf.sprintf "v%d" !ct
+  in
+  let rec aux env {node; (* output *) port} k =
     let i port = pred edges {node; port} in
     match List.assoc_opt (node, port) env with
-    | Some v -> Var v
+    | Some v -> Var v, k, env
     | None ->
       match List.assoc node nodes, port with
       | Conclusion _, _ -> failwith "invalid output for Conclusion"
-      | Assumption i, 1 -> Var (Printf.sprintf "a%d" i)
+      | Assumption i, 1 -> Var (Printf.sprintf "a%d" i), k, env
       | Assumption _, _ -> failwith "invalid output for Assumption"
-      | ConjI, 1 -> Cons (aux env (i 1), aux env (i 2))
+      | ConjI, 1 ->
+        (* FIXME mooooonad! *)
+        let l, k, env = aux env (i 1) k in
+        let r, k, env = aux env (i 2) k in
+        Cons (l, r), k, env
       | ConjI, _ -> failwith "invalid output for ConjI"
       | ConjE, _ ->
-        let env' = ((node, 1), "x") :: ((node, 2), "y") :: env in
+        let s, k, env = aux env (i 1) k in
+        let left = fresh () in
+        let right = fresh () in
+        let k x = k (Let (left, right, s, x)) in
+        let env = ((node, 1), left) :: ((node, 2), right) :: env in
         match port with
-        | 1 -> Let ("x", "y", aux env' (i 1), Var "x")
-        | 2 -> Let ("x", "y", aux env' (i 1), Var "y")
+        | 1 -> Var left, k, env
+        | 2 -> Var right, k, env
         | _ -> failwith "invalid output for ConjE"
   in
-  aux [] (pred edges {node; port = 1})
+  let t, k, _env = aux [] (pred edges {node; port = 1}) (fun x -> x) in
+  k t
