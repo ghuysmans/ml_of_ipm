@@ -3,6 +3,7 @@ type t =
   | Conclusion of int
   | ConjI
   | ConjE
+  | ArrowE
 
 type dir =
   | In

@@ -2,12 +2,14 @@ type t =
   | Var of string
   | Cons of t * t
   | Let of string * string * t * t
+  | App of t * t
   [@@deriving show {with_path = false}]
 
 let rec free v = function
   | Var v' -> v = v'
   | Cons (t, t') -> free v t || free v t'
   | Let (l, r, t, b) -> free v t || v <> l && v <> r && free v b
+  | App (f, x) -> free v f && free v x
 
 open Graph
 
@@ -24,6 +26,12 @@ let of_graph (nodes, edges) node =
     | Some v -> Var v, k, env
     | None ->
       match List.assoc node nodes, port with
+      | ArrowE, 1 ->
+        (* FIXME mooooonad! *)
+        let f, k, env = aux env (i 1) k in
+        let x, k, env = aux env (i 2) k in
+        App (f, x), k, env
+      | ArrowE, _ -> failwith "invalid output for ArrowE"
       | Conclusion _, _ -> failwith "invalid output for Conclusion"
       | Assumption i, 1 -> Var (Printf.sprintf "a%d" i), k, env
       | Assumption _, _ -> failwith "invalid output for Assumption"
