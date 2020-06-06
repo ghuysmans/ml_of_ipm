@@ -55,8 +55,27 @@ let mp2 = let open Graph in [
   ("A'", 1) --> ("C", 1);
 ]
 
+let id = let open Graph in [
+  "C", Conclusion 1;
+  "F", ArrowI;
+], [
+  ("F", 1) --> ("F", 1);
+  ("F", 2) --> ("C", 1);
+]
+
+let const = let open Graph in [
+  "H", Assumption 1;
+  "C", Conclusion 1;
+  "F", ArrowI;
+], [
+  ("H", 1) --> ("F", 1);
+  ("F", 2) --> ("C", 1);
+]
+
 let () =
   print_endline @@ Expr.(show @@ of_graph swap "C");
   print_endline @@ Expr.(show @@ of_graph assoc "C");
   print_endline @@ Expr.(show @@ of_graph mp "C");
   print_endline @@ Expr.(show @@ of_graph mp2 "C");
+  print_endline @@ Expr.(show @@ of_graph id "C");
+  print_endline @@ Expr.(show @@ of_graph const "C");
