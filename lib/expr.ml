@@ -11,7 +11,7 @@ let rec free v = function
   | Cons (t, t') -> free v t || free v t'
   | Let (l, r, t, b) -> free v t || v <> l && v <> r && free v b
   | Abs (a, b) -> v <> a && free v b
-  | App (f, x) -> free v f && free v x
+  | App (f, x) -> free v f || free v x
 
 open Graph
 
@@ -29,11 +29,11 @@ let of_graph (nodes, edges) node =
     | None ->
       match List.assoc node nodes, port with
       | ArrowI, 1 ->
-        let a = fresh () in
-        Var a, (fun x -> Abs (a, k x)), ((node, 1), a) :: env
+        failwith "unbound parameter"
       | ArrowI, 2 ->
-        let t, k', _env = aux env (i 1) (fun x -> x) in
-        k' t, k, env
+        let a = fresh () in
+        let t, k', _env = aux (((node, 1), a) :: env) (i 1) (fun x -> x) in
+        Abs (a, k' t), k, env
       | ArrowI, _ -> failwith "invalid output for ArrowI"
       | ArrowE, 1 ->
         (* FIXME mooooonad! *)
