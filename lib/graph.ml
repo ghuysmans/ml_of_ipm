@@ -8,6 +8,7 @@ type t =
   | DisjIL
   | DisjIR
   | DisjE
+  | FalseE
 
 type dir =
   | In
