@@ -72,6 +72,26 @@ let const = let open Graph in [
   ("F", 2) --> ("C", 1);
 ]
 
+let left = let open Graph in [
+  "H", Assumption 1;
+  "C", Conclusion 1;
+  "L", DisjIL;
+], [
+  ("H", 1) --> ("L", 1);
+  ("L", 1) --> ("C", 1);
+]
+
+let light = let open Graph in [
+  "H", Assumption 1;
+  "C", Conclusion 1;
+  "M", DisjE;
+], [
+  ("H", 1) --> ("M", 1);
+  ("M", 1) --> ("M", 2);
+  ("M", 2) --> ("M", 3);
+  ("M", 3) --> ("C", 1);
+]
+
 let () =
   print_endline @@ Expr.(show @@ of_graph swap "C");
   print_endline @@ Expr.(show @@ of_graph assoc "C");
@@ -79,3 +99,5 @@ let () =
   print_endline @@ Expr.(show @@ of_graph mp2 "C");
   print_endline @@ Expr.(show @@ of_graph id "C");
   print_endline @@ Expr.(show @@ of_graph const "C");
+  print_endline @@ Expr.(show @@ of_graph left "C");
+  print_endline @@ Expr.(show @@ of_graph light "C");

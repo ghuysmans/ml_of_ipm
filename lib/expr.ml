@@ -4,6 +4,9 @@ type t =
   | Let of string * string * t * t
   | Abs of string * t
   | App of t * t
+  | Left of t
+  | Right of t
+  | Match of t * string * t * string * t
   [@@deriving show {with_path = false}]
 
 let rec free v = function
@@ -12,6 +15,10 @@ let rec free v = function
   | Let (l, r, t, b) -> free v t || v <> l && v <> r && free v b
   | Abs (a, b) -> v <> a && free v b
   | App (f, x) -> free v f || free v x
+  | Left t -> free v t
+  | Right t -> free v t
+  | Match (d, l, lt, r, rt) ->
+    free v d || v <> l && free v lt || v <> r && free v rt
 
 open Graph
 
@@ -41,6 +48,25 @@ let of_graph (nodes, edges) node =
         let x, k, env = aux env (i 2) k in
         App (f, x), k, env
       | ArrowE, _ -> failwith "invalid output for ArrowE"
+      | DisjIL, 1 ->
+        let t, k, env = aux env (i 1) k in
+        Left t, k, env
+      | DisjIL, _ -> failwith "invalid output for DisjIL"
+      | DisjIR, 1 ->
+        let t, k, env = aux env (i 1) k in
+        Left t, k, env
+      | DisjIR, _ -> failwith "invalid output for DisjIR"
+      | DisjE, 1
+      | DisjE, 2 ->
+        failwith "unbound parameter"
+      | DisjE, 3 ->
+        let t, k, env = aux env (i 1) k in
+        let l = fresh () in
+        let lt, lk, _env = aux (((node, 1), l) :: env) (i 2) (fun x -> x) in
+        let r = fresh () in
+        let rt, rk, _env = aux (((node, 2), r) :: env) (i 3) (fun x -> x) in
+        Match (t, l, lk lt, r, rk rt), k, env
+      | DisjE, _ -> failwith "invalid output for DisjE"
       | Conclusion _, _ -> failwith "invalid output for Conclusion"
       | Assumption i, 1 -> Var (Printf.sprintf "a%d" i), k, env
       | Assumption _, _ -> failwith "invalid output for Assumption"

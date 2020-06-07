@@ -5,6 +5,9 @@ type t =
   | ConjE
   | ArrowI
   | ArrowE
+  | DisjIL
+  | DisjIR
+  | DisjE
 
 type dir =
   | In
