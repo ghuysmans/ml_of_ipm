@@ -9,6 +9,11 @@ type node =
   | DisjI2
   | DisjE
   | FalseE
+  | TND
+  | AllI
+  | AllE
+  | ExI
+  | ExE
 
 type port =
   | Out
@@ -51,7 +56,7 @@ let pred g d =
 
 module U = Yojson.Safe.Util
 
-let of_yojson t : t =
+let of_yojson t : t option =
   if U.member "qed" t |> U.to_bool then
     let nodes, edges =
       U.member "cells" t |> U.to_list |> List.map (fun c ->
@@ -92,6 +97,11 @@ let of_yojson t : t =
                 | "disjI2" -> [DisjI2]
                 | "disjE" -> [DisjE]
                 | "falseE" -> [FalseE]
+                | "TND" -> [TND]
+                | "allI" -> [AllI]
+                | "allE" -> [AllE]
+                | "exI" -> [ExI]
+                | "exE" -> [ExE]
                 | name -> failwith @@ "unknown rule " ^ name)
               | _ -> [] (* uninteresting member *)
             ) |>
@@ -99,7 +109,9 @@ let of_yojson t : t =
           with
           | [x] -> [U.member "id" c |> U.to_string, x], []
           | _ -> failwith "unknown node type"
-      ) |> List.split in
-    List.flatten nodes, List.flatten edges
+      ) |>
+      List.split
+    in
+    Some (List.flatten nodes, List.flatten edges)
   else
-    failwith "incomplete or invalid proof"
+    None (* incomplete or invalid proof *)
