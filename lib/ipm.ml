@@ -6,7 +6,7 @@ type prop = {
 let pp ppf _ (* {assumptions; conclusions} *) =
   Format.fprintf ppf "(todo)"
 
-type save = (prop * Graph.t) list
+type save = (prop * Yojson.Safe.t) list
 
 module U = Yojson.Safe.Util
 
@@ -17,9 +17,7 @@ let of_yojson t : save =
       let conv = U.(convert_each to_string) in
       let assumptions = conv assumptions in
       let conclusions = conv conclusions in
-      (match Graph.of_yojson p with
-      | Some p -> [{assumptions; conclusions}, p]
-      | None -> [])
+      [{assumptions; conclusions}, p]
     | _ -> []
   ) |>
   List.flatten

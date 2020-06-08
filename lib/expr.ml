@@ -71,7 +71,6 @@ let of_graph (nodes, edges) node =
       | FalseE, Out ->
         ExFalso, k, env
       | FalseE, _ -> failwith "invalid output for FalseE"
-      | TND, _ | AllI, _ | AllE, _ | ExI, _ | ExE, _ -> failwith "TODO"
       | DisjE, _ -> failwith "invalid output for DisjE"
       | Conclusion _, _ -> failwith "invalid output for Conclusion"
       | Assumption p, Out -> Var p (* FIXME *), k, env
