@@ -1,4 +1,4 @@
-type t =
+type node =
   | Assumption of string
   | Conclusion of string
   | ConjI
@@ -44,12 +44,14 @@ type edge = {
   label: string;
 }
 
+type t = (string * node) list * edge list
+
 let pred g d =
   (g |> List.find (fun {dest; _} -> dest = d)).source
 
 module U = Yojson.Safe.Util
 
-let of_yojson t =
+let of_yojson t : t =
   if U.member "qed" t |> U.to_bool then
     let nodes, edges =
       U.member "cells" t |> U.to_list |> List.map (fun c ->
