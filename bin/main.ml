@@ -1,7 +1,7 @@
 open Compiler
 
 let list fn =
-  let f ppf (i, p) = Format.fprintf ppf "%d : %a" (i + 1) Ipm.pp p in
+  let f ppf (i, (p, _)) = Format.fprintf ppf "%d: %a" (i + 1) Ipm.pp p in
   Ipm.of_yojson @@ Yojson.Safe.from_file fn |> List.mapi (fun i p -> i, p) |>
   Format.(printf "@[<v>%a@]@." (pp_print_list ~pp_sep:pp_print_cut f))
 

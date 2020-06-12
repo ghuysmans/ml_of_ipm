@@ -3,8 +3,10 @@ type prop = {
   conclusions: string list;
 }
 
-let pp ppf _ (* {assumptions; conclusions} *) =
-  Format.fprintf ppf "(todo)"
+let pp ppf {assumptions; conclusions} =
+  let pp_sep ppf () = Format.fprintf ppf ",@;" in
+  let f = Format.(pp_print_list ~pp_sep pp_print_string) in
+  Format.fprintf ppf "@[<hov>%a |- %a@]" f assumptions f conclusions
 
 type save = (prop * Yojson.Safe.t) list
 
