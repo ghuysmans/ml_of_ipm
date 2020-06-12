@@ -7,7 +7,7 @@ type t =
   | Left of t
   | Right of t
   | Match of t * string * t * string * t
-  | ExFalso
+  | ExFalso of t
   [@@deriving show {with_path = false}]
 
 let rec free v = function
@@ -20,7 +20,7 @@ let rec free v = function
   | Right t -> free v t
   | Match (d, l, lt, r, rt) ->
     free v d || v <> l && free v lt || v <> r && free v rt
-  | ExFalso -> false
+  | ExFalso t -> free v t
 
 open Graph
 
@@ -69,7 +69,8 @@ let of_graph (nodes, edges) node =
         let rt, rk, _env = aux (((node, Hyp2), r) :: env) (i In2) (fun x -> x) in
         Match (t, l, lk lt, r, rk rt), k, env
       | FalseE, Out ->
-        ExFalso, k, env
+        let t, k', _env = aux env (i In) (fun x -> ExFalso (k x)) in
+        t, k', env
       | FalseE, _ -> failwith "invalid output for FalseE"
       | DisjE, _ -> failwith "invalid output for DisjE"
       | Conclusion _, _ -> failwith "invalid output for Conclusion"
