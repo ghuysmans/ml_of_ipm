@@ -16,7 +16,9 @@ let compile fn i =
         | _ -> false
       ) |> fst
     in
-    Expr.pp ppf (Expr.of_graph (nodes, edges) c)
+    Expr.of_graph (nodes, edges) c |>
+    Ocaml.of_expr |>
+    Pprintast.expression ppf
   in
   Format.(printf "@[<v>%a@]@." (pp_print_list ~pp_sep:pp_print_cut f) conclusions)
 

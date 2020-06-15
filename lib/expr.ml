@@ -8,7 +8,6 @@ type t =
   | Right of t
   | Match of t * string * t * string * t
   | ExFalso of t
-  [@@deriving show {with_path = false}]
 
 let rec free v = function
   | Var v' -> v = v'
