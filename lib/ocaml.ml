@@ -1,5 +1,22 @@
 open Parsetree
 
+let mkcoretype ptyp_desc = {
+  ptyp_desc;
+  ptyp_loc = Location.none;
+  ptyp_attributes = [];
+}
+
+let rec of_prop = function
+  | Prop.Prop p -> mkcoretype @@
+    Ptyp_constr (Location.mknoloc (Longident.Lident (String.make 1 p)), [])
+  | Conj (p, q) -> mkcoretype @@ Ptyp_tuple (List.map of_prop [p; q])
+  | Disj (p, q) -> mkcoretype @@
+    Ptyp_constr (Location.mknoloc (Longident.Lident "either"),
+    List.map of_prop [p; q])
+  | Imp (p, q) -> mkcoretype @@ Ptyp_arrow (Nolabel, of_prop p, of_prop q)
+  | False -> mkcoretype @@
+    Ptyp_constr (Location.mknoloc (Longident.Lident "false"), [])
+
 let mkexpr pexp_desc = {
   pexp_desc;
   pexp_loc = Location.none;
@@ -30,8 +47,16 @@ let rec of_expr = function
         )
     } in
     mkexpr @@ Pexp_let (Nonrecursive, [binding], of_expr b)
-  | Abs (x, t) -> mkexpr @@
-    Pexp_fun (Nolabel, None, mkpat (Ppat_var (Location.mknoloc x)), of_expr t)
+  | Abs (x, t) ->
+    mkexpr @@ Pexp_fun (
+      Nolabel,
+      None,
+      mkpat @@ Ppat_constraint (
+        mkpat @@ Ppat_var (Location.mknoloc x),
+        mkcoretype @@ Ptyp_any (* FIXME *)
+      ),
+      of_expr t
+    )
   | App (f, x) ->
     (* FIXME? *)
     mkexpr @@ Pexp_apply (of_expr f, [Nolabel, of_expr x])
