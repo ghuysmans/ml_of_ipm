@@ -1,6 +1,6 @@
 type node =
-  | Assumption of string
-  | Conclusion of string
+  | Assumption of int
+  | Conclusion of int
   | ConjI
   | ConjE
   | ImpI
@@ -73,15 +73,10 @@ let of_yojson t : t =
           in
           [], [{source; dest; label}]
         else (* if typ = "incredible.Generic" then *)
-          let get_nth typ n =
-            U.member "task" c |> U.member typ |>
-            U.index (U.to_int n - 1) |>
-            U.to_string
-          in
           match
             U.to_assoc c |> List.map (function
-              | "assumption", n -> [Assumption (get_nth "assumptions" n)]
-              | "conclusion", n -> [Conclusion (get_nth "conclusions" n)]
+              | "assumption", n -> [Assumption (U.to_int n)]
+              | "conclusion", n -> [Conclusion (U.to_int n)]
               | "rule", r ->
                 (match U.(member "id" r |> to_string) with
                 | "conjI" -> [ConjI]

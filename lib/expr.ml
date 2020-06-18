@@ -23,7 +23,7 @@ let rec free v = function
 
 open Graph
 
-let of_graph (nodes, edges) node =
+let of_graph assumptions (nodes, edges) node =
   let fresh =
     let ct = ref 0 in
     fun () ->
@@ -73,7 +73,7 @@ let of_graph (nodes, edges) node =
       | FalseE, _ -> failwith "invalid output for FalseE"
       | DisjE, _ -> failwith "invalid output for DisjE"
       | Conclusion _, _ -> failwith "invalid output for Conclusion"
-      | Assumption p, Out -> Var p (* FIXME *), k, env
+      | Assumption i, Out -> Var (Printf.sprintf "a%d" i), k, env
       | Assumption _, _ -> failwith "invalid output for Assumption"
       | ConjI, Out ->
         (* FIXME mooooonad! *)
@@ -93,4 +93,8 @@ let of_graph (nodes, edges) node =
         | _ -> failwith "invalid output for ConjE"
   in
   let t, k, _env = aux [] (pred edges {node; port = In}) (fun x -> x) in
-  k t
+  let rec f i = function
+    | [] -> k t
+    | _h :: t -> Abs (Printf.sprintf "a%d" i, f (i + 1) t)
+  in
+  f 1 assumptions

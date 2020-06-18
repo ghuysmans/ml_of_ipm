@@ -7,7 +7,7 @@ let list fn =
 
 let compile fn i =
   let t = Ipm.of_yojson @@ Yojson.Safe.from_file fn in
-  let {Ipm.conclusions; _}, j = List.nth t (i - 1) in
+  let {Ipm.conclusions; assumptions}, j = List.nth t (i - 1) in
   let nodes, edges = Graph.of_yojson j in
   let f ppf c =
     let c =
@@ -16,11 +16,12 @@ let compile fn i =
         | _ -> false
       ) |> fst
     in
-    Expr.of_graph (nodes, edges) c |>
+    Expr.of_graph assumptions (nodes, edges) c |>
     Ocaml.of_expr |>
     Pprintast.expression ppf
   in
-  Format.(printf "@[<v>%a@]@." (pp_print_list ~pp_sep:pp_print_cut f) conclusions)
+  List.init (List.length conclusions) (fun i -> i + 1) |>
+  Format.(printf "@[<v>%a@]@." (pp_print_list ~pp_sep:pp_print_cut f))
 
 
 open Cmdliner
