@@ -1,3 +1,5 @@
+(ocamllex (modules prop_lexer))
+(menhir (modules prop_parser))
 (library
  (name compiler)
  (libraries yojson compiler-libs.common)
