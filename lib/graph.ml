@@ -41,13 +41,14 @@ type r = {
 type edge = {
   source: r;
   dest: r;
-  label: string;
+  label: Prop.t;
 }
 
 type t = (string * node) list * edge list
 
 let pred g d =
-  (g |> List.find (fun {dest; _} -> dest = d)).source
+  let r = List.find (fun {dest; _} -> dest = d) g in
+  r.source, r.label
 
 module U = Yojson.Safe.Util
 
@@ -69,7 +70,9 @@ let of_yojson t : t =
           let dest = get_end "target" in
           let label =
             U.member "labels" c |> U.index 0 |> U.member "attrs" |>
-            U.member "text" |> U.member "text" |> U.to_string
+            U.member "text" |> U.member "text" |> U.to_string |>
+            Lexing.from_string |>
+            Prop_parser.parse Prop_lexer.top
           in
           [], [{source; dest; label}]
         else (* if typ = "incredible.Generic" then *)

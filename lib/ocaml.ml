@@ -47,13 +47,13 @@ let rec of_expr = function
         )
     } in
     mkexpr @@ Pexp_let (Nonrecursive, [binding], of_expr b)
-  | Abs (x, t) ->
+  | Abs (x, prop, t) ->
     mkexpr @@ Pexp_fun (
       Nolabel,
       None,
       mkpat @@ Ppat_constraint (
         mkpat @@ Ppat_var (Location.mknoloc x),
-        mkcoretype @@ Ptyp_any (* FIXME *)
+        of_prop prop
       ),
       of_expr t
     )

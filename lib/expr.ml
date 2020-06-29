@@ -2,7 +2,7 @@ type t =
   | Var of string
   | Cons of t * t
   | Let of string * string * t * t
-  | Abs of string * t
+  | Abs of string * Prop.t * t
   | App of t * t
   | Left of t
   | Right of t
@@ -13,7 +13,7 @@ let rec free v = function
   | Var v' -> v = v'
   | Cons (t, t') -> free v t || free v t'
   | Let (l, r, t, b) -> free v t || v <> l && v <> r && free v b
-  | Abs (a, b) -> v <> a && free v b
+  | Abs (a, _, b) -> v <> a && free v b
   | App (f, x) -> free v f || free v x
   | Left t -> free v t
   | Right t -> free v t
@@ -30,7 +30,7 @@ let of_graph assumptions (nodes, edges) node =
       incr ct;
       Printf.sprintf "v%d" !ct
   in
-  let rec aux env {node; (* output *) port} k =
+  let rec aux env ({node; (* output *) port}, typ) k =
     let i port = pred edges {node; port} in
     match List.assoc_opt (node, port) env with
     | Some v -> Var v, k, env
@@ -41,7 +41,12 @@ let of_graph assumptions (nodes, edges) node =
       | ImpI, Out ->
         let a = fresh () in
         let t, k', _env = aux (((node, Hyp), a) :: env) (i In) (fun x -> x) in
-        Abs (a, k' t), k, env
+        let atyp =
+          match typ with
+          | Prop.Imp (t, _) -> t
+          | _ -> failwith "function type mismatch"
+        in
+        Abs (a, atyp, k' t), k, env
       | ImpI, _ -> failwith "invalid output for ImpI"
       | ImpE, Out ->
         (* FIXME mooooonad! *)
@@ -95,6 +100,6 @@ let of_graph assumptions (nodes, edges) node =
   let t, k, _env = aux [] (pred edges {node; port = In}) (fun x -> x) in
   let rec f i = function
     | [] -> k t
-    | _h :: t -> Abs (Printf.sprintf "a%d" i, f (i + 1) t)
+    | h :: t -> Abs (Printf.sprintf "a%d" i, h, f (i + 1) t)
   in
   f 1 assumptions
