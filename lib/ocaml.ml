@@ -16,6 +16,7 @@ let rec of_prop = function
   | Imp (p, q) -> mkcoretype @@ Ptyp_arrow (Nolabel, of_prop p, of_prop q)
   | False -> mkcoretype @@
     Ptyp_constr (Location.mknoloc (Longident.Lident "false"), [])
+  | Forall _ | Exists _ | Pred _ -> failwith "unsupported predicate logic"
 
 let mkexpr pexp_desc = {
   pexp_desc;
